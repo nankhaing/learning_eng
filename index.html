@@ -63,11 +63,12 @@
         .success { color: #27ae60; }
         .toggle-link {
             margin-top: 20px;
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-secondary, #666);
             cursor: pointer;
             text-decoration: underline;
         }
+        .toggle-link:hover { color: #764ba2; }
         .dev-badge {
             background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
             color: #d35400;
@@ -78,10 +79,24 @@
             display: inline-block;
             margin-bottom: 15px;
         }
+        .divider {
+            margin: 20px 0;
+            border-top: 1px solid var(--border, #ddd);
+            position: relative;
+        }
+        .divider-text {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface, white);
+            padding: 0 15px;
+            color: var(--text-secondary, #666);
+            font-size: 12px;
+        }
     </style>
 </head>
-<body>
-    <div class="login-card">
+<body>    <div class="login-card">
         <div class="logo">🎓</div>
         <h1 data-i18n="login.title">English Learning</h1>
         <p class="subtitle" data-i18n="login.subtitle">Sign in to continue</p>
@@ -93,10 +108,20 @@
         <input type="text" id="username" class="hidden" data-i18n-placeholder="login.username" placeholder="👤 Username">
         
         <button onclick="handleLogin()" id="loginBtn" data-i18n="login.button">🚀 Login</button>
-        <button onclick="toggleRegister()" id="registerBtn" class="hidden" data-i18n="login.register">📝 Create Account</button>
+        <button onclick="handleLogin()" id="registerBtn" class="hidden" data-i18n="login.register">📝 Create Account</button>
+        
+        <!-- ✅ NEW: Visible Toggle Link -->
+        <div class="toggle-link" id="toggleText" onclick="toggleRegister()">
+            Don't have an account? <strong>Sign Up</strong>
+        </div>
+        
+        <div class="divider">
+            <span class="divider-text">OR</span>
+        </div>
+        
+        <div class="toggle-link" onclick="toggleDevMode()" data-i18n="login.developer">⚙️ Developer Login?</div>
         
         <div id="message" class="message"></div>
-                <div class="toggle-link" onclick="toggleDevMode()" data-i18n="login.developer">⚙️ Developer Login?</div>
     </div>
 
     <script type="module">
@@ -120,23 +145,44 @@
         }
 
         window.toggleDevMode = function() {
-            isDevMode = !isDevMode;
-            const badge = document.getElementById('devBadge');
+            isDevMode = !isDevMode;            const badge = document.getElementById('devBadge');
             const msg = document.getElementById('message');
+            const toggleText = document.getElementById('toggleText');
+            
             if (isDevMode) {
                 badge.classList.remove('hidden');
                 msg.innerHTML = "<span style='color:#d35400'>Developer: Use password 1234 or register</span>";
+                toggleText.classList.add('hidden');
             } else {
                 badge.classList.add('hidden');
                 msg.innerHTML = "";
+                toggleText.classList.remove('hidden');
             }
         };
 
         window.toggleRegister = function() {
             isRegisterMode = !isRegisterMode;
-            document.getElementById('username').classList.toggle('hidden', !isRegisterMode);
-            document.getElementById('loginBtn').classList.toggle('hidden', isRegisterMode);
-            document.getElementById('registerBtn').classList.toggle('hidden', !isRegisterMode);
+            
+            const usernameField = document.getElementById('username');
+            const loginBtn = document.getElementById('loginBtn');
+            const registerBtn = document.getElementById('registerBtn');
+            const toggleText = document.getElementById('toggleText');
+            
+            if (isRegisterMode) {
+                // Show Register Form
+                usernameField.classList.remove('hidden');
+                loginBtn.classList.add('hidden');
+                registerBtn.classList.remove('hidden');
+                toggleText.innerHTML = 'Already have an account? <strong>Login</strong>';
+                document.querySelector('.subtitle').innerText = 'Create your account';
+            } else {
+                // Show Login Form
+                usernameField.classList.add('hidden');
+                loginBtn.classList.remove('hidden');
+                registerBtn.classList.add('hidden');
+                toggleText.innerHTML = "Don't have an account? <strong>Sign Up</strong>";
+                document.querySelector('.subtitle').innerText = 'Sign in to continue';
+            }
         };
 
         window.handleLogin = async function() {
@@ -145,10 +191,10 @@
             const username = document.getElementById('username').value;
             const message = document.getElementById('message');
 
-            if (!email || !password) {                message.innerHTML = "<span class='error'>❌ Please fill all fields!</span>";
+            if (!email || !password) {
+                message.innerHTML = "<span class='error'>❌ Please fill all fields!</span>";
                 return;
             }
-
             try {
                 if (isRegisterMode) {
                     if (!username) {
@@ -194,10 +240,10 @@
         });
 
         async function getCurrentUser() {
-            const { account } = await import('./appwrite-config.js');            try {
+            const { account } = await import('./appwrite-config.js');
+            try {
                 const user = await account.get();
-                return { success: true, user };
-            } catch (error) {
+                return { success: true, user };            } catch (error) {
                 return { success: false, error: error.message };
             }
         }
