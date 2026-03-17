@@ -9,7 +9,6 @@
     <title>English Learning - Login</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="dark-mode.css">
-    <link rel="stylesheet" href="multi-language.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -22,7 +21,7 @@
             padding: 20px;
         }
         .login-card {
-            background: var(--surface, white);
+            background: white;
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
@@ -31,40 +30,38 @@
             text-align: center;
         }
         .logo { font-size: 60px; margin-bottom: 15px; }
-        h1 { color: var(--text, #333); margin-bottom: 10px; font-size: 28px; }
-        .subtitle { color: var(--text-secondary, #666); margin-bottom: 30px; }
+        h1 { color: #333; margin-bottom: 10px; font-size: 28px; }
+        .subtitle { color: #666; margin-bottom: 30px; }
         input {
             width: 100%;
             padding: 15px;
             margin: 10px 0;
-            border: 2px solid var(--border, #ddd);
+            border: 2px solid #ddd;
             border-radius: 12px;
             font-size: 16px;
-            background: var(--input-bg, white);
-            color: var(--text, #333);
         }
         input:focus { outline: none; border-color: #764ba2; }
         button {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 12px;            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             margin-top: 15px;
             transition: 0.3s;
         }
         button:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(118,75,162,0.4); }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         .message { margin-top: 15px; font-size: 14px; font-weight: bold; }
         .error { color: #e74c3c; }
         .success { color: #27ae60; }
         .toggle-link {
             margin-top: 20px;
             font-size: 14px;
-            color: var(--text-secondary, #666);
+            color: #666;
             cursor: pointer;
             text-decoration: underline;
         }
@@ -79,109 +76,76 @@
             display: inline-block;
             margin-bottom: 15px;
         }
-        .divider {
-            margin: 20px 0;
-            border-top: 1px solid var(--border, #ddd);
-            position: relative;
-        }
-        .divider-text {
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--surface, white);
-            padding: 0 15px;
-            color: var(--text-secondary, #666);
-            font-size: 12px;
-        }
     </style>
 </head>
-<body>    <div class="login-card">
+<body>
+    <div class="login-card">
         <div class="logo">🎓</div>
-        <h1 data-i18n="login.title">English Learning</h1>
-        <p class="subtitle" data-i18n="login.subtitle">Sign in to continue</p>
+        <h1>English Learning</h1>
+        <p class="subtitle" id="subtitle">Sign in to continue</p>
         
         <div id="devBadge" class="dev-badge hidden">🛠️ Developer Mode</div>
         
-        <input type="email" id="email" data-i18n-placeholder="login.email" placeholder="📧 Email">
-        <input type="password" id="password" data-i18n-placeholder="login.password" placeholder="🔑 Password">
-        <input type="text" id="username" class="hidden" data-i18n-placeholder="login.username" placeholder="👤 Username">
+        <input type="email" id="email" placeholder="📧 Email">
+        <input type="password" id="password" placeholder="🔑 Password">
+        <input type="text" id="username" class="hidden" placeholder="👤 Username">
         
-        <button onclick="handleLogin()" id="loginBtn" data-i18n="login.button">🚀 Login</button>
-        <button onclick="handleLogin()" id="registerBtn" class="hidden" data-i18n="login.register">📝 Create Account</button>
+        <button onclick="handleLogin()" id="loginBtn">🚀 Login</button>
+        <button onclick="handleLogin()" id="registerBtn" class="hidden">📝 Create Account</button>
         
-        <!-- ✅ NEW: Visible Toggle Link -->
         <div class="toggle-link" id="toggleText" onclick="toggleRegister()">
             Don't have an account? <strong>Sign Up</strong>
         </div>
-        
-        <div class="divider">
-            <span class="divider-text">OR</span>
-        </div>
-        
-        <div class="toggle-link" onclick="toggleDevMode()" data-i18n="login.developer">⚙️ Developer Login?</div>
+                <div class="toggle-link" onclick="toggleDevMode()" style="margin-top: 15px;">⚙️ Developer Login?</div>
         
         <div id="message" class="message"></div>
     </div>
 
-    <script type="module">
-        import { createAccount, login, getUserData, createUserDocument, sendWelcomeNotification } from './appwrite-config.js';
-        import { initLanguage } from './language-service.js';
-        import { initAudio } from './audio-service.js';
-        import { initTheme } from './theme.js';
-
-        let isDevMode = false;
+    <script>
+        // ✅ Toggle function works WITHOUT module imports
         let isRegisterMode = false;
-
-        // Initialize
-        initLanguage();
-        initTheme();
-        initAudio();
-
-        // Check if already logged in
-        const currentUser = await getCurrentUser();
-        if (currentUser.success) {
-            window.location.href = "dashboard.html";
-        }
-
-        window.toggleDevMode = function() {
-            isDevMode = !isDevMode;            const badge = document.getElementById('devBadge');
-            const msg = document.getElementById('message');
-            const toggleText = document.getElementById('toggleText');
-            
-            if (isDevMode) {
-                badge.classList.remove('hidden');
-                msg.innerHTML = "<span style='color:#d35400'>Developer: Use password 1234 or register</span>";
-                toggleText.classList.add('hidden');
-            } else {
-                badge.classList.add('hidden');
-                msg.innerHTML = "";
-                toggleText.classList.remove('hidden');
-            }
-        };
+        let isDevMode = false;
 
         window.toggleRegister = function() {
+            console.log('Toggle clicked!');
             isRegisterMode = !isRegisterMode;
             
             const usernameField = document.getElementById('username');
             const loginBtn = document.getElementById('loginBtn');
             const registerBtn = document.getElementById('registerBtn');
             const toggleText = document.getElementById('toggleText');
+            const subtitle = document.getElementById('subtitle');
             
             if (isRegisterMode) {
-                // Show Register Form
                 usernameField.classList.remove('hidden');
                 loginBtn.classList.add('hidden');
                 registerBtn.classList.remove('hidden');
                 toggleText.innerHTML = 'Already have an account? <strong>Login</strong>';
-                document.querySelector('.subtitle').innerText = 'Create your account';
+                subtitle.innerText = 'Create your account';
+                console.log('Register mode ON');
             } else {
-                // Show Login Form
                 usernameField.classList.add('hidden');
                 loginBtn.classList.remove('hidden');
                 registerBtn.classList.add('hidden');
                 toggleText.innerHTML = "Don't have an account? <strong>Sign Up</strong>";
-                document.querySelector('.subtitle').innerText = 'Sign in to continue';
+                subtitle.innerText = 'Sign in to continue';
+                console.log('Register mode OFF');
+            }
+        };
+
+        window.toggleDevMode = function() {
+            isDevMode = !isDevMode;
+            const badge = document.getElementById('devBadge');
+            const message = document.getElementById('message');
+            const toggleText = document.getElementById('toggleText');
+            
+            if (isDevMode) {
+                badge.classList.remove('hidden');
+                message.innerHTML = "<span class='error'>Developer: Use password 1234</span>";
+                toggleText.classList.add('hidden');
+            } else {
+                badge.classList.add('hidden');
+                message.innerHTML = "";                toggleText.classList.remove('hidden');
             }
         };
 
@@ -195,7 +159,13 @@
                 message.innerHTML = "<span class='error'>❌ Please fill all fields!</span>";
                 return;
             }
+
+            message.innerHTML = "<span style='color:#764ba2'>⏳ Processing...</span>";
+
             try {
+                // Import Appwrite dynamically
+                const { createAccount, login, getUserData, createUserDocument, sendWelcomeNotification } = await import('./appwrite-config.js');
+
                 if (isRegisterMode) {
                     if (!username) {
                         message.innerHTML = "<span class='error'>❌ Please enter username!</span>";
@@ -204,7 +174,6 @@
                     const result = await createAccount(email, password, username);
                     
                     if (result.success) {
-                        await sendWelcomeNotification(result.user.$id, username);
                         message.innerHTML = "<span class='success'>✅ Account created! Redirecting...</span>";
                         setTimeout(() => window.location.href = "dashboard.html", 1500);
                     } else {
@@ -214,13 +183,8 @@
                     const result = await login(email, password);
                     
                     if (result.success) {
-                        const userData = await getUserData(result.user.$id);
-                        
-                        if (!userData.success) {
-                            await createUserDocument(result.user.$id, username || result.user.name, email);
-                        }
-                        
-                        if (isDevMode && (password === "1234" || password === "register")) {
+                        if (isDevMode && password === "1234") {
+                            message.innerHTML = "<span class='success'>✅ Admin login! Redirecting...</span>";
                             setTimeout(() => window.location.href = "admin.html", 1500);
                         } else {
                             message.innerHTML = "<span class='success'>✅ Login successful! Redirecting...</span>";
@@ -230,23 +194,19 @@
                         message.innerHTML = "<span class='error'>❌ " + result.error + "</span>";
                     }
                 }
-            } catch (error) {
+            } catch (error) {                console.error('Error:', error);
                 message.innerHTML = "<span class='error'>❌ " + error.message + "</span>";
             }
         };
 
-        document.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleLogin();
+        // Allow Enter key to submit
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleLogin();
+            }
         });
 
-        async function getCurrentUser() {
-            const { account } = await import('./appwrite-config.js');
-            try {
-                const user = await account.get();
-                return { success: true, user };            } catch (error) {
-                return { success: false, error: error.message };
-            }
-        }
+        console.log('✅ Login page loaded successfully!');
     </script>
 </body>
 </html>
