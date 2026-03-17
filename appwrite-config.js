@@ -136,76 +136,6 @@ export async function createUserDocument(userId, username, email) {
     }
 }
 
-// ============ LESSONS ============
-
-export async function getLessons(level = null) {
-    try {
-        const queries = [];
-        if (level) {
-            queries.push(Query.equal('level', level));
-        }
-        queries.push(Query.equal('published', true));
-                const result = await databases.listDocuments(
-            DATABASE_ID,
-            COLLECTIONS.LESSONS,
-            queries
-        );
-        
-        return { success: true, lessons: result.documents };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
-}
-
-export async function createLesson(lessonData) {
-    try {
-        const result = await databases.createDocument(
-            DATABASE_ID,
-            COLLECTIONS.LESSONS,
-            ID.unique(),
-            lessonData
-        );
-        return { success: true, data: result };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
-}
-
-// ============ PROGRESS ============
-
-export async function saveProgress(userId, lessonId, score, completed = true) {
-    try {
-        const result = await databases.createDocument(
-            DATABASE_ID,
-            COLLECTIONS.PROGRESS,
-            ID.unique(),
-            {
-                userId: userId,
-                lessonId: lessonId,
-                score: score,
-                completed: completed,
-                timestamp: new Date().toISOString()
-            }
-        );
-        return { success: true, data: result };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
-}
-
-export async function getUserProgress(userId) {
-    try {        const result = await databases.listDocuments(
-            DATABASE_ID,
-            COLLECTIONS.PROGRESS,
-            [Query.equal('userId', userId)]
-        );
-        
-        return { success: true, progress: result.documents };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
-}
-
 // ============ NOTIFICATIONS ============
 
 export async function sendNotification(userId, title, message, type = 'general', action = null) {
@@ -215,8 +145,7 @@ export async function sendNotification(userId, title, message, type = 'general',
             COLLECTIONS.NOTIFICATIONS,
             ID.unique(),
             {
-                userId: userId,
-                title: title,
+                userId: userId,                title: title,
                 message: message,
                 type: type,
                 read: false,
@@ -243,7 +172,8 @@ export async function getUserNotifications(userId, limit = 50) {
         );
         
         return { success: true, notifications: result.documents };
-    } catch (error) {        return { success: false, error: error.message };
+    } catch (error) {
+        return { success: false, error: error.message };
     }
 }
 
@@ -256,6 +186,82 @@ export async function markNotificationAsRead(docId) {
             { read: true }
         );
         return { success: true, data: result };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+// ============ PROGRESS ============
+
+export async function saveProgress(userId, lessonId, score, completed = true) {
+    try {        const result = await databases.createDocument(
+            DATABASE_ID,
+            COLLECTIONS.PROGRESS,
+            ID.unique(),
+            {
+                userId: userId,
+                lessonId: lessonId,
+                score: score,
+                completed: completed,
+                timestamp: new Date().toISOString()
+            }
+        );
+        return { success: true, data: result };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+// ============ LEADERBOARD ============
+
+export async function getLeaderboard(category = 'xp', limit = 100) {
+    try {
+        const result = await databases.listDocuments(
+            DATABASE_ID,
+            COLLECTIONS.USERS,
+            [
+                Query.orderDesc(category),
+                Query.limit(limit)
+            ]
+        );
+        
+        return { success: true, users: result.documents };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+// ============ CERTIFICATES ============
+
+export async function createCertificate(userId, username, courseName, score) {
+    try {
+        const result = await databases.createDocument(
+            DATABASE_ID,
+            COLLECTIONS.CERTIFICATES,
+            ID.unique(),
+            {
+                userId: userId,
+                username: username,
+                courseName: courseName,
+                score: score,                certificateId: `CERT-${Date.now()}`,
+                issuedAt: new Date().toISOString()
+            }
+        );
+        return { success: true, data: result };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function getUserCertificates(userId) {
+    try {
+        const result = await databases.listDocuments(
+            DATABASE_ID,
+            COLLECTIONS.CERTIFICATES,
+            [Query.equal('userId', userId)]
+        );
+        
+        return { success: true, certificates: result.documents };
     } catch (error) {
         return { success: false, error: error.message };
     }
@@ -282,84 +288,52 @@ export async function trackAnalytics(type, userId, data) {
     }
 }
 
-// ============ CERTIFICATES ============
-
-export async function createCertificate(userId, username, courseName, score) {
-    try {
-        const result = await databases.createDocument(
-            DATABASE_ID,
-            COLLECTIONS.CERTIFICATES,
-            ID.unique(),
-            {
-                userId: userId,
-                username: username,                courseName: courseName,
-                score: score,
-                certificateId: `CERT-${Date.now()}`,
-                issuedAt: new Date().toISOString()
-            }
-        );
-        return { success: true, data: result };
-    } catch (error) {
-        return { success: false, error: error.message };
+export async function getUserInsights(userId) {
+    const userData = await getUserData(userId);
+    if (!userData.success) return [];
+    
+    const insights = [];    const data = userData.data;
+    
+    if (data.streak >= 7) {
+        insights.push({
+            type: 'positive',
+            message: `🔥 Great! You're on a ${data.streak}-day streak!`
+        });
     }
+    
+    if (data.xp >= 1000) {
+        insights.push({
+            type: 'positive',
+            message: `⭐ Excellent! You've earned ${data.xp} XP!`
+        });
+    }
+    
+    if (data.lessonsCompleted >= 10) {
+        insights.push({
+            type: 'positive',
+            message: `📚 Awesome! You've completed ${data.lessonsCompleted} lessons!`
+        });
+    }
+    
+    return insights;
 }
 
-export async function getUserCertificates(userId) {
-    try {
-        const result = await databases.listDocuments(
-            DATABASE_ID,
-            COLLECTIONS.CERTIFICATES,
-            [Query.equal('userId', userId)]
-        );
-        
-        return { success: true, certificates: result.documents };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
-}
+// ============ GLOBAL EXPORTS (ONLY ONCE!) ============
 
-// ============ LEADERBOARD ============
-
-export async function getLeaderboard(category = 'xp', limit = 100) {
-    try {
-        const result = await databases.listDocuments(
-            DATABASE_ID,
-            COLLECTIONS.USERS,
-            [
-                Query.orderDesc(category),
-                Query.limit(limit)
-            ]
-        );
-        
-        return { success: true, users: result.documents };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
-}
-
-// Export for global access
+// ✅ Each function exported ONLY ONCE at the end
 window.createAccount = createAccount;
 window.login = login;
 window.logout = logout;
-window.getCurrentUser = getCurrentUser;window.getUserData = getUserData;
+window.getCurrentUser = getCurrentUser;
+window.getUserData = getUserData;
 window.updateUserData = updateUserData;
 window.createUserDocument = createUserDocument;
-window.getLessons = getLessons;
-window.createLesson = createLesson;
-window.saveProgress = saveProgress;
-window.getUserProgress = getUserProgress;
 window.sendNotification = sendNotification;
 window.getUserNotifications = getUserNotifications;
 window.markNotificationAsRead = markNotificationAsRead;
-window.trackAnalytics = trackAnalytics;
+window.saveProgress = saveProgress;
+window.getLeaderboard = getLeaderboard;
 window.createCertificate = createCertificate;
 window.getUserCertificates = getUserCertificates;
-window.getLeaderboard = getLeaderboard;
-
-export {
-    client, account, databases, DATABASE_ID, COLLECTIONS, ID, Query,
-    createAccount, login, logout, getCurrentUser, getUserData, updateUserData,
-    createUserDocument, getLessons, createLesson, saveProgress, getUserProgress,
-    sendNotification, getUserNotifications, markNotificationAsRead, trackAnalytics,
-    createCertificate, getUserCertificates, getLeaderboard
-};
+window.trackAnalytics = trackAnalytics;
+window.getUserInsights = getUserInsights;
