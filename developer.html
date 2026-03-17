@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Developer Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Comic Sans MS', sans-serif;
+      background: #f3e5f5;
+      padding: 20px;
+    }
+    h1 {
+      color: #6a1b9a;
+      text-align: center;
+    }
+    .box {
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px #ccc;
+      max-width: 500px;
+      margin: 20px auto;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      padding: 10px;
+      width: 100%;
+      background-color: #6a1b9a;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #8e24aa;
+    }
+    .user-list {
+      margin-top: 15px;
+    }
+    .user-list li {
+      margin: 4px 0;
+      padding: 6px;
+      background: #e1bee7;
+      border-radius: 6px;
+    }
+    .msg {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🛠️ Developer Panel</h1>
+
+  <div class="box">
+    <h2>Add New User</h2>
+    <input type="text" id="newUsername" placeholder="Username" />
+    <input type="password" id="newPassword" placeholder="Password" />
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" />
+    <select id="newRole">
+      <option value="student">Student</option>
+      <option value="developer">Developer</option>
+    </select>
+    <button onclick="addUser()">➕ Add User</button>
+    <p class="msg" id="addMsg"></p>
+  </div>
+
+  <div class="box">
+    <h2>📋 User List</h2>
+    <ul class="user-list" id="userList"></ul>
+  </div>
+
+  <div class="box">
+    <h2>⚠️ Reset All Data</h2>
+    <button style="background:#d32f2f;" onclick="resetAll()">🗑️ Reset to Default</button>
+  </div>
+  <button onclick="location.href='login.html'">Login</button>
+  <button onclick="location.href='index.html'">🏠 Main Menu</button>
+  <script>
+    const userListEl = document.getElementById("userList");
+    const msgEl = document.getElementById("addMsg");
+
+    function loadUsers() {
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      userListEl.innerHTML = "";
+      users.forEach(u => {
+        const li = document.createElement("li");
+        li.textContent = `${u.username} — ${u.role}`;
+        userListEl.appendChild(li);
+      });
+    }
+
+    function addUser() {
+      const username = document.getElementById("newUsername").value.trim();
+      const password = document.getElementById("newPassword").value.trim();
+      const confirm = document.getElementById("confirmPassword").value.trim();
+      const role = document.getElementById("newRole").value;
+
+      if (!username || !password || !confirm) {
+        msgEl.textContent = "⚠️ Please fill in all fields.";
+        return;
+      }
+      if (password !== confirm) {
+        msgEl.textContent = "❌ Passwords do not match.";
+        return;
+      }
+
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      if (users.some(u => u.username === username)) {
+        msgEl.textContent = "❌ Username already exists.";
+        return;
+      }
+
+      users.push({ username, password, role });
+      localStorage.setItem("users", JSON.stringify(users));
+      msgEl.style.color = "green";
+      msgEl.textContent = "✅ User added successfully!";
+      loadUsers();
+    }
+
+    function resetAll() {
+      const defaultUsers = [
+        { username: "Hezekiah", password: "1234", role: "student" },
+        { username: "Ooaung", password: "1234", role: "developer" }
+      ];
+      localStorage.setItem("users", JSON.stringify(defaultUsers));
+      alert("🔄 All users reset to default.");
+      loadUsers();
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>

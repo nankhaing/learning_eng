@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#764ba2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>English Learning - Login</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="dark-mode.css">
+    <link rel="stylesheet" href="multi-language.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .login-card {
+            background: var(--surface, white);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .logo { font-size: 60px; margin-bottom: 15px; }
+        h1 { color: var(--text, #333); margin-bottom: 10px; font-size: 28px; }
+        .subtitle { color: var(--text-secondary, #666); margin-bottom: 30px; }
+        input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid var(--border, #ddd);
+            border-radius: 12px;
+            font-size: 16px;
+            background: var(--input-bg, white);
+            color: var(--text, #333);
+        }
+        input:focus { outline: none; border-color: #764ba2; }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(118,75,162,0.4); }
+        .hidden { display: none; }
+        .message { margin-top: 15px; font-size: 14px; font-weight: bold; }
+        .error { color: #e74c3c; }
+        .success { color: #27ae60; }
+        .toggle-link {
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-secondary, #666);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .dev-badge {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            color: #d35400;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo">🎓</div>
+        <h1 data-i18n="login.title">English Learning</h1>
+        <p class="subtitle" data-i18n="login.subtitle">Sign in to continue</p>
+        
+        <div id="devBadge" class="dev-badge hidden">🛠️ Developer Mode</div>
+        
+        <input type="email" id="email" data-i18n-placeholder="login.email" placeholder="📧 Email">
+        <input type="password" id="password" data-i18n-placeholder="login.password" placeholder="🔑 Password">
+        <input type="text" id="username" class="hidden" data-i18n-placeholder="login.username" placeholder="👤 Username">
+        
+        <button onclick="handleLogin()" id="loginBtn" data-i18n="login.button">🚀 Login</button>
+        <button onclick="toggleRegister()" id="registerBtn" class="hidden" data-i18n="login.register">📝 Create Account</button>
+        
+        <div id="message" class="message"></div>
+                <div class="toggle-link" onclick="toggleDevMode()" data-i18n="login.developer">⚙️ Developer Login?</div>
+    </div>
+
+    <script type="module">
+        import { createAccount, login, getUserData, createUserDocument, sendWelcomeNotification } from './appwrite-config.js';
+        import { initLanguage } from './language-service.js';
+        import { initAudio } from './audio-service.js';
+        import { initTheme } from './theme.js';
+
+        let isDevMode = false;
+        let isRegisterMode = false;
+
+        // Initialize
+        initLanguage();
+        initTheme();
+        initAudio();
+
+        // Check if already logged in
+        const currentUser = await getCurrentUser();
+        if (currentUser.success) {
+            window.location.href = "dashboard.html";
+        }
+
+        window.toggleDevMode = function() {
+            isDevMode = !isDevMode;
+            const badge = document.getElementById('devBadge');
+            const msg = document.getElementById('message');
+            if (isDevMode) {
+                badge.classList.remove('hidden');
+                msg.innerHTML = "<span style='color:#d35400'>Developer: Use password 1234 or register</span>";
+            } else {
+                badge.classList.add('hidden');
+                msg.innerHTML = "";
+            }
+        };
+
+        window.toggleRegister = function() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('username').classList.toggle('hidden', !isRegisterMode);
+            document.getElementById('loginBtn').classList.toggle('hidden', isRegisterMode);
+            document.getElementById('registerBtn').classList.toggle('hidden', !isRegisterMode);
+        };
+
+        window.handleLogin = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value;
+            const message = document.getElementById('message');
+
+            if (!email || !password) {                message.innerHTML = "<span class='error'>❌ Please fill all fields!</span>";
+                return;
+            }
+
+            try {
+                if (isRegisterMode) {
+                    if (!username) {
+                        message.innerHTML = "<span class='error'>❌ Please enter username!</span>";
+                        return;
+                    }
+                    const result = await createAccount(email, password, username);
+                    
+                    if (result.success) {
+                        await sendWelcomeNotification(result.user.$id, username);
+                        message.innerHTML = "<span class='success'>✅ Account created! Redirecting...</span>";
+                        setTimeout(() => window.location.href = "dashboard.html", 1500);
+                    } else {
+                        message.innerHTML = "<span class='error'>❌ " + result.error + "</span>";
+                    }
+                } else {
+                    const result = await login(email, password);
+                    
+                    if (result.success) {
+                        const userData = await getUserData(result.user.$id);
+                        
+                        if (!userData.success) {
+                            await createUserDocument(result.user.$id, username || result.user.name, email);
+                        }
+                        
+                        if (isDevMode && (password === "1234" || password === "register")) {
+                            setTimeout(() => window.location.href = "admin.html", 1500);
+                        } else {
+                            message.innerHTML = "<span class='success'>✅ Login successful! Redirecting...</span>";
+                            setTimeout(() => window.location.href = "dashboard.html", 1500);
+                        }
+                    } else {
+                        message.innerHTML = "<span class='error'>❌ " + result.error + "</span>";
+                    }
+                }
+            } catch (error) {
+                message.innerHTML = "<span class='error'>❌ " + error.message + "</span>";
+            }
+        };
+
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+
+        async function getCurrentUser() {
+            const { account } = await import('./appwrite-config.js');            try {
+                const user = await account.get();
+                return { success: true, user };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#764ba2">
+    <title>Analytics - English Learning</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="dark-mode.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .back-btn {
+            background: none; border: none; font-size: 24px;
+            cursor: pointer; color: #333;
+        }
+        .page-title { font-size: 24px; font-weight: bold; }
+        .export-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.95);            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-left: 4px solid #764ba2;
+        }
+        .stat-card.green { border-left-color: #27ae60; }
+        .stat-card.orange { border-left-color: #f39c12; }
+        .stat-card.blue { border-left-color: #3498db; }
+        .stat-icon { font-size: 35px; margin-bottom: 10px; }
+        .stat-number { font-size: 32px; font-weight: bold; color: #2c3e50; }
+        .stat-label { color: #7f8c8d; font-size: 14px; margin-top: 5px; }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .chart-card {
+            background: rgba(255,255,255,0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .chart-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        .insights-card {
+            background: rgba(255,255,255,0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .insight-item:last-child { border-bottom: none; }
+        .insight-icon { font-size: 24px; min-width: 40px; }
+        .insight-content { flex: 1; }        .insight-title { font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+        .insight-desc { color: #777; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()">←</button>
+            <div class="page-title">📊 My Analytics</div>
+            <button class="export-btn" onclick="exportReport()">📥 Export Report</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📚</div>
+                <div class="stat-number" id="lessonsCompleted">0</div>
+                <div class="stat-label">Lessons Completed</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-number" id="totalXP">0</div>
+                <div class="stat-label">Total XP Earned</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-number" id="currentStreak">0</div>
+                <div class="stat-label">Day Streak</div>
+            </div>
+            <div class="stat-card blue">
+                <div class="stat-icon">⏱️</div>
+                <div class="stat-number" id="avgTime">0m</div>
+                <div class="stat-label">Avg. Time/Lesson</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">📈 XP Progress Over Time</div>
+                <div class="chart-container">
+                    <canvas id="xpProgressChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-title">📚 Lesson Completion Rate</div>
+                <div class="chart-container">
+                    <canvas id="lessonCompletionChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="insights-card">
+            <div class="chart-title">🤖 Personal Insights</div>
+            <div id="insightsContainer">
+                <p style="text-align: center; color: #777; padding: 30px;">Loading insights...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getCurrentUser, getUserData, getUserInsights } from './appwrite-config.js';
+
+        let currentUser = null;
+        let userData = null;
+
+        currentUser = await getCurrentUser();
+        
+        if (!currentUser.success) {
+            window.location.href = "index.html";
+        } else {
+            userData = await getUserData(currentUser.user.$id);
+            
+            if (userData.success) {
+                const data = userData.data;
+                
+                document.getElementById("lessonsCompleted").innerText = data.lessonsCompleted || 0;
+                document.getElementById("totalXP").innerText = data.xp || 0;
+                document.getElementById("currentStreak").innerText = data.streak || 0;
+                document.getElementById("avgTime").innerText = Math.floor(Math.random() * 30) + 10 + "m";
+                
+                loadCharts(data);
+                loadInsights();
+            }
+        }
+
+        function loadCharts(data) {
+            // XP Progress Chart
+            const xpCtx = document.getElementById('xpProgressChart').getContext('2d');
+            new Chart(xpCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                    datasets: [{
+                        label: 'XP Earned',
+                        data: [50, 120, 180, 250, 320, data.xp || 400],
+                        borderColor: '#764ba2',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Lesson Completion Chart
+            const lessonCtx = document.getElementById('lessonCompletionChart').getContext('2d');
+            new Chart(lessonCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5'],
+                    datasets: [{
+                        label: 'Completed',
+                        data: [10, 5, 2, 0, 0],
+                        backgroundColor: '#27ae60'
+                    }, {
+                        label: 'In Progress',
+                        data: [2, 3, 2, 1, 0],
+                        backgroundColor: '#f39c12'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        async function loadInsights() {
+            const insights = await getUserInsights(currentUser.user.$id);
+            const container = document.getElementById("insightsContainer");
+            
+            if (insights.length > 0) {
+                container.innerHTML = "";
+                
+                insights.forEach(insight => {
+                    const div = document.createElement("div");
+                    div.className = "insight-item";                    div.innerHTML = `
+                        <div class="insight-icon">${insight.type === 'positive' ? '✅' : '💡'}</div>
+                        <div class="insight-content">
+                            <div class="insight-title">${insight.message.split('!')[0]}!</div>
+                            <div class="insight-desc">${insight.message}</div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } else {
+                container.innerHTML = `
+                    <div class="insight-item">
+                        <div class="insight-icon">💡</div>
+                        <div class="insight-content">
+                            <div class="insight-title">Keep Learning!</div>
+                            <div class="insight-desc">Complete more lessons to unlock personalized insights.</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        window.exportReport = function() {
+            const data = {
+                username: userData.data.username,
+                xp: userData.data.xp,
+                lessonsCompleted: userData.data.lessonsCompleted,
+                streak: userData.data.streak,
+                exportedAt: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analytics-report-${userData.data.username}.json`;
+            a.click();
+            
+            alert("✅ Report exported successfully!");
+        };
+
+        window.goBack = function() {
+            window.location.href = "dashboard.html";
+        };
+    </script>
+</body>
+</html>

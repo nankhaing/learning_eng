@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#764ba2">
+    <title>Lesson - English Learning</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="dark-mode.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        .question-icon { font-size: 60px; margin-bottom: 20px; }
+        .question-text { font-size: 22px; margin-bottom: 30px; }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .option-btn {
+            background: #f4f7f6;
+            border: 2px solid #ddd;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .option-btn:hover { border-color: #764ba2; }
+        .option-btn.correct { border-color: #27ae60; background: #d5f5e3; }
+        .option-btn.wrong { border-color: #e74c3c; background: #fadbd8; }
+        .action-btn {
+            background: #764ba2;
+            color: white;            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: none;
+        }
+        .feedback.correct { background: #d5f5e3; color: #27ae60; display: block; }
+        .feedback.wrong { background: #fadbd8; color: #e74c3c; display: block; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="question-icon" id="questionIcon">📖</div>
+        <div class="question-text" id="questionText">Loading...</div>
+        <div class="options-grid" id="optionsGrid"></div>
+        <button class="action-btn" id="actionBtn" onclick="checkAnswer()">Check Answer</button>
+        <div class="feedback" id="feedback"></div>
+        <button class="action-btn hidden" id="continueBtn" onclick="nextQuestion()" style="background: #27ae60; margin-top: 10px;">Continue →</button>
+    </div>
+
+    <script type="module">
+        import { getCurrentUser, getUserData, updateUserData, saveProgress, sendLessonCompleteNotification } from './appwrite-config.js';
+        import { playSFX } from './audio-service.js';
+        import { trackLessonCompletion } from './analytics-service.js';
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOption = null;
+
+        const questions = [
+            {
+                icon: "🍎",
+                question: "What is this?",
+                options: ["Apple", "Banana", "Orange", "Grape"],
+                correct: 0
+            },
+            {
+                icon: "🐕",
+                question: "Select the correct word",
+                options: ["Cat", "Dog", "Bird", "Fish"],
+                correct: 1
+            },            {
+                icon: "📚",
+                question: "Type the word for this image",
+                options: ["Book", "Pen", "Paper", "Pencil"],
+                correct: 0
+            }
+        ];
+
+        const currentUser = await getCurrentUser();
+        if (!currentUser.success) {
+            window.location.href = "index.html";
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById("questionIcon").innerText = q.icon;
+            document.getElementById("questionText").innerText = q.question;
+            
+            const grid = document.getElementById("optionsGrid");
+            grid.innerHTML = "";
+            
+            q.options.forEach((option, index) => {
+                const btn = document.createElement("div");
+                btn.className = "option-btn";
+                btn.innerText = option;
+                btn.onclick = () => selectOption(index, btn);
+                grid.appendChild(btn);
+            });
+            
+            selectedOption = null;
+            document.getElementById("feedback").style.display = "none";
+            document.getElementById("actionBtn").classList.remove("hidden");
+            document.getElementById("continueBtn").classList.add("hidden");
+        }
+
+        window.selectOption = function(index, btn) {
+            document.querySelectorAll(".option-btn").forEach(b => b.classList.remove("selected"));
+            btn.classList.add("selected");
+            selectedOption = index;
+        };
+
+        window.checkAnswer = async function() {
+            if (selectedOption === null) {
+                alert("Please select an answer!");
+                return;
+            }
+            
+            const q = questions[currentQuestion];
+            const feedback = document.getElementById("feedback");
+            const isCorrect = selectedOption === q.correct;            
+            if (isCorrect) {
+                score++;
+                playSFX('success');
+                feedback.innerText = "✅ Correct! Great job!";
+                feedback.className = "feedback correct";
+            } else {
+                playSFX('error');
+                feedback.innerText = "❌ Wrong! The correct answer is: " + q.options[q.correct];
+                feedback.className = "feedback wrong";
+            }
+            
+            document.querySelectorAll(".option-btn")[q.correct].classList.add("correct");
+            if (!isCorrect) {
+                document.querySelectorAll(".option-btn")[selectedOption].classList.add("wrong");
+            }
+            
+            document.getElementById("actionBtn").classList.add("hidden");
+            document.getElementById("continueBtn").classList.remove("hidden");
+        };
+
+        window.nextQuestion = async function() {
+            currentQuestion++;
+            
+            if (currentQuestion >= questions.length) {
+                const accuracy = Math.round((score / questions.length) * 100);
+                const xp = accuracy * 10;
+                
+                const userData = await getUserData(currentUser.user.$id);
+                if (userData.success) {
+                    await updateUserData(userData.docId, {
+                        xp: (userData.data.xp || 0) + xp,
+                        lessonsCompleted: (userData.data.lessonsCompleted || 0) + 1
+                    });
+                    
+                    await saveProgress(currentUser.user.$id, "1.2", accuracy);
+                    await sendLessonCompleteNotification(currentUser.user.$id, userData.data.username, "1.2 Basic Words", accuracy);
+                    await trackLessonCompletion(currentUser.user.$id, "1.2", accuracy, 5);
+                }
+                
+                alert(`🎉 Lesson Complete! Score: ${accuracy}%, XP: +${xp}`);
+                window.location.href = "dashboard.html";
+            } else {
+                loadQuestion();
+            }
+        };
+
+        loadQuestion();
+    </script>
+</body></html>

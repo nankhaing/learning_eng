@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#764ba2">
+    <title>Notifications - English Learning</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="dark-mode.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .back-btn {
+            background: none; border: none; font-size: 24px;
+            cursor: pointer; color: #333;
+        }
+        .page-title { font-size: 24px; font-weight: bold; }
+        .notification-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+        }
+        .notification-card.unread { border-left: 4px solid #764ba2; background: #f5f0ff; }
+        .notification-icon { font-size: 35px; }
+        .notification-content { flex: 1; }
+        .notification-title { font-weight: bold; margin-bottom: 5px; }
+        .notification-message { color: #777; font-size: 14px; }
+        .notification-time { font-size: 12px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="container">        <div class="header">
+            <button class="back-btn" onclick="goBack()">←</button>
+            <div class="page-title">🔔 Notifications</div>
+            <div style="width: 24px;"></div>
+        </div>
+
+        <div id="notificationList">
+            <p style="text-align: center; padding: 50px; color: #777;">Loading...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getCurrentUser, getUserNotifications, markNotificationAsRead } from './appwrite-config.js';
+
+        const currentUser = await getCurrentUser();
+        if (!currentUser.success) {
+            window.location.href = "index.html";
+        }
+
+        const result = await getUserNotifications(currentUser.user.$id, 50);
+        const list = document.getElementById("notificationList");
+        
+        if (result.success && result.notifications.length > 0) {
+            list.innerHTML = "";
+            
+            result.notifications.forEach(notif => {
+                const div = document.createElement("div");
+                div.className = "notification-card" + (notif.read ? "" : " unread");
+                div.innerHTML = `
+                    <div class="notification-icon">${getIcon(notif.type)}</div>
+                    <div class="notification-content">
+                        <div class="notification-title">${notif.title}</div>
+                        <div class="notification-message">${notif.message}</div>
+                        <div class="notification-time">${new Date(notif.timestamp).toLocaleDateString()}</div>
+                    </div>
+                `;
+                div.onclick = () => {
+                    if (!notif.read) {
+                        markNotificationAsRead(notif.$id);
+                        div.classList.remove("unread");
+                    }
+                };
+                list.appendChild(div);
+            });
+        } else {
+            list.innerHTML = "<p style='text-align: center; padding: 50px; color: #777;'>No notifications yet.</p>";
+        }
+
+        function getIcon(type) {
+            const icons = {                'achievement': '🏆',
+                'reminder': '⏰',
+                'streak': '🔥',
+                'lesson': '📚',
+                'welcome': '👋',
+                'level_up': '⬆️',
+                'certificate': '📜'
+            };
+            return icons[type] || '🔔';
+        }
+
+        window.goBack = function() {
+            window.location.href = "dashboard.html";
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+/* 📁 public/dark-mode.css */
+
+/* Light Theme (Default) */
+:root[data-theme="light"] {
+    --primary: #764ba2;
+    --secondary: #667eea;
+    --success: #27ae60;
+    --warning: #f39c12;
+    --error: #e74c3c;
+    --background: #f4f7f6;
+    --surface: #ffffff;
+    --text: #2c3e50;
+    --text-secondary: #777777;
+    --border: #e0e0e0;
+    --shadow: rgba(0, 0, 0, 0.1);
+    --card-bg: #ffffff;
+    --input-bg: #ffffff;
+    --hover-bg: #f0f0f0;
+}
+
+/* Dark Theme */
+:root[data-theme="dark"] {
+    --primary: #9b6dd6;
+    --secondary: #8a9df5;
+    --success: #2ecc71;
+    --warning: #f1c40f;
+    --error: #e74c3c;
+    --background: #0f0f1a;
+    --surface: #1a1a2e;
+    --text: #eaeaea;
+    --text-secondary: #b0b0b0;
+    --border: #2d2d44;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --card-bg: #16213e;
+    --input-bg: #1a1a2e;
+    --hover-bg: #2d2d44;
+}
+
+/* Base Styles */
+body {
+    background: var(--background);
+    color: var(--text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Cards & Surfaces */
+.card, .profile-card, .stats-card, .certificate-card,
+.notification-card, .leaderboard-card, .preferences-card,
+.login-card, .modal-content, .section, .header {
+    background: var(--surface);    color: var(--text);
+    border: 1px solid var(--border);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Text Colors */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text);
+}
+
+p, span, label {
+    color: var(--text);
+}
+
+.text-secondary, .subtitle, .stat-label, .notification-message {
+    color: var(--text-secondary);
+}
+
+/* Inputs */
+input, select, textarea {
+    background: var(--input-bg);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+/* Buttons */
+button, .btn, .action-btn {
+    transition: all 0.3s ease;
+}
+
+button:hover, .btn:hover, .action-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Tables */
+table {
+    background: var(--surface);
+    color: var(--text);
+}
+
+th {
+    background: var(--hover-bg);
+    color: var(--text);
+}
+td {
+    border-bottom-color: var(--border);
+    color: var(--text);
+}
+
+tr:hover {
+    background: var(--hover-bg);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary);
+}
+
+/* Theme Toggle Button */
+#themeToggle {
+    background: var(--surface);
+    color: var(--text);
+    border: 2px solid var(--border);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    box-shadow: 0 4px 15px var(--shadow);
+}
+
+#themeToggle:hover {
+    transform: scale(1.1) rotate(15deg);    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* Progress Bars */
+.progress-bar {
+    background: var(--border);
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, var(--secondary), var(--primary));
+}
+
+/* Badges */
+.badge, .status, .certificate-score, .history-score {
+    background: var(--hover-bg);
+    color: var(--text);
+}
+
+/* Modal Backdrop */
+.modal {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+/* Code Blocks */
+code, pre {
+    background: var(--hover-bg);
+    color: var(--text);
+}
+
+/* Links */
+a {
+    color: var(--secondary);
+}
+
+a:hover {
+    color: var(--primary);
+}
+
+/* Selection */
+::selection {
+    background: var(--primary);
+    color: white;
+}
+
+/* Focus Ring */
+:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    #themeToggle {
+        bottom: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+}
+

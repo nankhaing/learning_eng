@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#764ba2">
+    <title>Profile - English Learning</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="dark-mode.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .back-btn {
+            background: none; border: none; font-size: 24px;
+            cursor: pointer; color: #333;
+        }
+        .page-title { font-size: 24px; font-weight: bold; }
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        .profile-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+        }
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid #764ba2;
+            font-size: 60px;
+            display: flex;            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .stat-item {
+            background: #f4f7f6;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .stat-value { font-size: 32px; font-weight: bold; color: #764ba2; }
+        .stat-label { color: #777; font-size: 14px; }
+        .edit-btn {
+            background: #764ba2;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()">←</button>
+            <div class="page-title">👤 My Profile</div>
+            <div style="width: 24px;"></div>
+        </div>
+
+        <div class="profile-grid">
+            <div class="profile-card">
+                <div class="avatar" id="userAvatar">👤</div>
+                <h2 id="profileUsername">Loading...</h2>
+                <p id="profileEmail" style="color: #777;">...</p>
+                <button class="edit-btn" onclick="openEditModal()">✏️ Edit Profile</button>
+            </div>
+
+            <div class="profile-card">
+                <h3 style="margin-bottom: 20px;">📊 Statistics</h3>                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="xpDisplay">0</div>
+                        <div class="stat-label">Total XP</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="lessonsDisplay">0</div>
+                        <div class="stat-label">Lessons Completed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="streakDisplay">0</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="levelDisplay">1</div>
+                        <div class="stat-label">Level</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getCurrentUser, getUserData } from './appwrite-config.js';
+
+        const currentUser = await getCurrentUser();
+        
+        if (!currentUser.success) {
+            window.location.href = "index.html";
+        } else {
+            const userData = await getUserData(currentUser.user.$id);
+            
+            if (userData.success) {
+                const data = userData.data;
+                document.getElementById("profileUsername").innerText = data.username || "Student";
+                document.getElementById("profileEmail").innerText = data.email || "";
+                document.getElementById("xpDisplay").innerText = data.xp || 0;
+                document.getElementById("lessonsDisplay").innerText = data.lessonsCompleted || 0;
+                document.getElementById("streakDisplay").innerText = data.streak || 0;
+                document.getElementById("levelDisplay").innerText = Math.floor((data.xp || 0) / 100) + 1;
+            }
+        }
+
+        window.goBack = function() {
+            window.location.href = "dashboard.html";
+        };
+
+        window.openEditModal = function() {
+            alert("Edit profile feature - coming soon!");
+        };    </script>
+</body>
+</html>

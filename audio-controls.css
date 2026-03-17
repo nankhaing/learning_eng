@@ -1,0 +1,226 @@
+/* 📁 public/audio-controls.css */
+
+/* Audio Controller */
+.audio-controller {
+    position: relative;
+}
+
+.audio-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.audio-btn:hover {
+    transform: scale(1.1);
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.audio-btn.playing {
+    animation: pulse-music 2s infinite;
+}
+
+@keyframes pulse-music {
+    0% { box-shadow: 0 4px 15px var(--shadow); }
+    50% { box-shadow: 0 4px 25px var(--primary); }
+    100% { box-shadow: 0 4px 15px var(--shadow); }
+}
+
+/* Audio Panel */
+.audio-panel {
+    display: none;
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    width: 280px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 15px;    padding: 20px;
+    box-shadow: 0 10px 40px var(--shadow);
+    z-index: 1001;
+}
+
+.audio-section {
+    margin-bottom: 15px;
+}
+
+.audio-section:last-child {
+    margin-bottom: 0;
+}
+
+.audio-section label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.audio-section input[type="range"] {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.audio-section input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.audio-section input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.audio-section select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--background);    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.quick-actions button {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--background);
+    color: var(--text);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quick-actions button:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* Volume Indicator */
+.volume-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 3px;
+}
+
+/* Now Playing */
+.now-playing {
+    background: var(--background);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.now-playing-icon {    font-size: 20px;
+    animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.now-playing-info {
+    flex: 1;
+}
+
+.now-playing-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.now-playing-status {
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+/* Visualizer */
+.audio-visualizer {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 30px;
+    margin-top: 10px;
+}
+
+.visualizer-bar {
+    width: 4px;
+    background: var(--primary);
+    border-radius: 2px;
+    animation: visualize 0.5s ease-in-out infinite;
+}
+
+.visualizer-bar:nth-child(1) { animation-delay: 0s; }
+.visualizer-bar:nth-child(2) { animation-delay: 0.1s; }
+.visualizer-bar:nth-child(3) { animation-delay: 0.2s; }
+.visualizer-bar:nth-child(4) { animation-delay: 0.3s; }
+.visualizer-bar:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes visualize {
+    0%, 100% { height: 5px; }
+    50% { height: 25px; }
+}
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .audio-panel {
+        right: -50px;
+        width: 250px;
+    }
+    
+    .audio-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+    
+    #audioController {
+        bottom: 130px !important;
+        right: 15px !important;
+    }
+}
+
+/* RTL Support */
+[dir="rtl"] #audioController {
+    right: auto;
+    left: 20px;
+}
+
+[dir="rtl"] .audio-panel {
+    right: auto;
+    left: 0;
+}
+

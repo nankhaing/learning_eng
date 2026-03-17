@@ -1,0 +1,189 @@
+/* 📁 public/multi-language.css */
+
+/* RTL Support */
+[dir="rtl"] {
+    text-align: right;
+}
+
+[dir="rtl"] .header {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .sidebar {
+    border-left: none;
+    border-right: 1px solid var(--border);
+}
+
+[dir="rtl"] .menu-item {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .stat-card {
+    border-left: none;
+    border-right: 4px solid var(--primary);
+}
+
+[dir="rtl"] .notification-card {
+    border-left: none;
+    border-right: 4px solid var(--primary);
+}
+
+/* Language Selector */
+#languageSelector {
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#languageSelector:hover {
+    border-color: var(--primary);
+}
+
+#languageSelector:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(118, 75, 162, 0.3);}
+
+/* Language Switcher Button (Floating) */
+#languageToggle {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--text);
+    border: 2px solid var(--border);
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    box-shadow: 0 4px 15px var(--shadow);
+    transition: all 0.3s ease;
+}
+
+#languageToggle:hover {
+    transform: scale(1.1);
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+[dir="rtl"] #languageToggle {
+    right: auto;
+    left: 20px;
+}
+
+/* Font Adjustments for Different Languages */
+html[lang="my"] {
+    font-family: 'Padauk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html[lang="zh"] {
+    font-family: 'Noto Sans SC', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html[lang="ja"] {
+    font-family: 'Noto Sans JP', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html[lang="ar"] {
+    font-family: 'Noto Sans Arabic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+
+html[lang="hi"] {
+    font-family: 'Noto Sans Devanagari', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Language Modal */
+.language-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.language-modal-content {
+    background: var(--surface);
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 400px;
+    width: 90%;
+}
+
+.language-modal-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--text);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.language-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.language-option {
+    padding: 15px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--background);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.3s ease;    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.language-option:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.language-option.active {
+    border-color: var(--primary);
+    background: rgba(118, 75, 162, 0.1);
+}
+
+.language-flag {
+    font-size: 24px;
+}
+
+.language-name {
+    font-weight: 500;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .language-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    #languageToggle {
+        bottom: 70px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    [dir="rtl"] #languageToggle {
+        left: 15px;
+    }
+}
+

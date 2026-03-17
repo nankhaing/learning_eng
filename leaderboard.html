@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#764ba2">
+    <title>Leaderboard - English Learning</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="dark-mode.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .back-btn {
+            background: none; border: none; font-size: 24px;
+            cursor: pointer; color: #333;
+        }
+        .page-title { font-size: 24px; font-weight: bold; }
+        .leaderboard-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 20px;
+        }
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f4f7f6;
+            border-radius: 12px;
+        }
+        .rank-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .rank-1 { background: #f39c12; color: white; }
+        .rank-2 { background: #bdc3c7; color: white; }
+        .rank-3 { background: #cd7f32; color: white; }
+        .rank-other { background: #ddd; color: #777; }
+        .user-avatar { font-size: 35px; margin-right: 15px; }
+        .user-info { flex: 1; }
+        .user-name { font-weight: bold; }
+        .user-score { font-weight: bold; color: #764ba2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()">←</button>
+            <div class="page-title">🏆 Leaderboard</div>
+            <div style="width: 24px;"></div>
+        </div>
+
+        <div class="leaderboard-card" id="leaderboardList">
+            <p style="text-align: center; padding: 50px; color: #777;">Loading...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getLeaderboard, getCurrentUser } from './appwrite-config.js';
+
+        const currentUser = await getCurrentUser();
+        if (!currentUser.success) {
+            window.location.href = "index.html";
+        }
+
+        const result = await getLeaderboard('xp', 100);
+        const list = document.getElementById("leaderboardList");
+        
+        if (result.success && result.users.length > 0) {
+            list.innerHTML = "";
+            
+            result.users.forEach((user, index) => {
+                const rank = index + 1;
+                const isCurrentUser = user.userId === currentUser.user.$id;
+                
+                const div = document.createElement("div");
+                div.className = "leaderboard-item" + (isCurrentUser ? " current-user" : "");
+                div.innerHTML = `
+                    <div class="rank-number rank-${rank <= 3 ? rank : 'other'}">${rank}</div>                    <div class="user-avatar">${user.username?.charAt(0).toUpperCase() || '👤'}</div>
+                    <div class="user-info">
+                        <div class="user-name">${user.username || 'Anonymous'}${isCurrentUser ? ' (You)' : ''}</div>
+                        <div style="font-size: 12px; color: #777;">${user.lessonsCompleted || 0} lessons</div>
+                    </div>
+                    <div class="user-score">${user.xp || 0} XP</div>
+                `;
+                list.appendChild(div);
+            });
+        } else {
+            list.innerHTML = "<p style='text-align: center; padding: 50px; color: #777;'>No users yet. Be the first!</p>";
+        }
+
+        window.goBack = function() {
+            window.location.href = "dashboard.html";
+        };
+    </script>
+</body>
+</html>
